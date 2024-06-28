@@ -1,22 +1,31 @@
-from paddleocr import PaddleOCR,draw_ocr
+from paddleocr import PaddleOCR, draw_ocr
 import os
 import json
 import glob
 from PIL import Image
 
+
 class wordLevelPaddleOCR:
-    def __init__(self, det_lang='ml', use_gpu=False, lang='en', use_angle_cls=True, det_algorithm="DB"):
+    def __init__(
+        self, det_lang='ml', use_gpu=False, lang='en', use_angle_cls=True, det_algorithm="DB"
+    ):
         self.det_lang = det_lang
         self.use_gpu = use_gpu
         self.lang = lang
         self.use_angle_cls = use_angle_cls
         self.det_algorithm = det_algorithm
-        self.ocr = PaddleOCR(det_lang=self.det_lang, use_gpu=self.use_gpu, lang=self.lang, use_angle_cls=self.use_angle_cls, det_algorithm=self.det_algorithm)
+        self.ocr = PaddleOCR(
+            det_lang=self.det_lang,
+            use_gpu=self.use_gpu,
+            lang=self.lang,
+            use_angle_cls=self.use_angle_cls,
+            det_algorithm=self.det_algorithm,
+        )
 
     def get_result(self, img_path):
         result = self.ocr.ocr(img_path, cls=self.use_angle_cls)
         return result
-    
+
     def process_result(self, img_path):
         result = self.get_result(img_path)[0]
         cur_text = []
@@ -25,7 +34,7 @@ class wordLevelPaddleOCR:
             boxes = line[0]
             txts = line[1][0]
             ##
-            topLeft, topRight, bottomRight, bottomLeft = boxes 
+            topLeft, topRight, bottomRight, bottomLeft = boxes
             ##
             dxTop = (topRight[0] - topLeft[0]) / len(txts)
             dxBottom = (bottomRight[0] - bottomLeft[0]) / len(txts)
@@ -34,30 +43,30 @@ class wordLevelPaddleOCR:
             ##
             new_txt = txts.split()
             top, bottom = topLeft, bottomLeft
-            
+
             for txt in new_txt:
                 newTop = [top[0], top[1]]
                 newBottom = [bottom[0], bottom[1]]
                 possition = [[top[0], top[1]], newTop, newBottom, [bottom[0], bottom[1]]]
 
-                possition[1][0] += len(txt) * dxTop # p[1][0]
-                possition[1][1] += len(txt) * dyTop # p[1][1]
-                possition[2][0] += len(txt) * dxBottom #p[2][0]
-                possition[2][1] += len(txt) * dyBottom #p[2][1]
+                possition[1][0] += len(txt) * dxTop  # p[1][0]
+                possition[1][1] += len(txt) * dyTop  # p[1][1]
+                possition[2][0] += len(txt) * dxBottom  # p[2][0]
+                possition[2][1] += len(txt) * dyBottom  # p[2][1]
                 cur_pos.append(possition)
                 cur_text.append(txt)
 
-                top[1] +=  dyTop * (len(txt) + 1)
+                top[1] += dyTop * (len(txt) + 1)
                 top[0] += dxTop * (len(txt) + 1)
                 bottom[1] += dyBottom * (len(txt) + 1)
                 bottom[0] += dxBottom * (len(txt) + 1)
 
         return list(zip(cur_text, cur_pos))
-    
+
     def export(self, input_dir, output_dir):
         os.makedirs(output_dir, exist_ok=True)
         file_paths = glob.glob(os.path.join(input_dir, '*'))
-        
+
         for img_path in file_paths:
             result = self.process_result(img_path)
             # Generate JSON output path based on image name
