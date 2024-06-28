@@ -1,6 +1,7 @@
 from paddleocr import PaddleOCR,draw_ocr
 import os
 import json
+import glob
 from PIL import Image
 
 class wordLevelPaddleOCR:
@@ -53,20 +54,21 @@ class wordLevelPaddleOCR:
 
         return list(zip(cur_text, cur_pos))
     
-    def export(self, img_path, output_dir):
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        result = self.process_result(img_path)
+    def export(self, input_dir, output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        file_paths = glob.glob(os.path.join(input_dir, '*'))
+        
+        for img_path in file_paths:
+            result = self.process_result(img_path)
+            # Generate JSON output path based on image name
+            img_name = os.path.basename(img_path)
+            base_name, _ = os.path.splitext(img_name)
+            output_json_path = os.path.join(output_dir, f"{base_name}.json")
+            output_img_path = os.path.join(output_dir, f"{base_name}_annotated.jpg")
 
-        # Generate JSON output path based on image name
-        img_name = os.path.basename(img_path)
-        base_name, _ = os.path.splitext(img_name)
-        output_json_path = os.path.join(output_dir, f"{base_name}.json")
-        output_img_path = os.path.join(output_dir, f"{base_name}_annotated.jpg")
+            # Save results to JSON file
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=4)
 
-        # Save results to JSON file
-        with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, ensure_ascii=False, indent=4)
-
-        image = Image.open(img_path).convert('RGB')
-        image.save(output_img_path)
+            image = Image.open(img_path).convert('RGB')
+            image.save(output_img_path)
