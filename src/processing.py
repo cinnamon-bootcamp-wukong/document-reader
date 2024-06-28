@@ -6,6 +6,28 @@ from PIL import Image
 
 
 class wordLevelPaddleOCR:
+    """
+    A class to perform word-level Optical Character Recognition (OCR) using PaddleOCR.
+
+    Attributes:
+        det_lang (str): The language to be used for detection (default is 'ml').
+        use_gpu (bool): Whether to use GPU for OCR (default is False).
+        lang (str): The language for OCR (default is 'en').
+        use_angle_cls (bool): Whether to use angle classification (default is True).
+        det_algorithm (str): The detection algorithm to use (default is "DB").
+        ocr (PaddleOCR): An instance of PaddleOCR initialized with the given parameters.
+
+    Methods:
+        get_result(img_path):
+            Performs OCR on the given image and returns the result.
+
+        process_result(img_path):
+            Processes the OCR result to extract word-level text and positions.
+
+        export(input_dir, output_dir):
+            Processes all images in the input directory, saves results as JSON, and annotated images in the output directory.
+    """
+
     def __init__(
         self, det_lang='ml', use_gpu=False, lang='en', use_angle_cls=True, det_algorithm="DB"
     ):
@@ -23,24 +45,44 @@ class wordLevelPaddleOCR:
         )
 
     def get_result(self, img_path):
+        """
+        Performs OCR on the given image and returns the result.
+
+        Args:
+            img_path (str): The path to the image file.
+
+        Returns:
+            list: The OCR result.
+        """
+
         result = self.ocr.ocr(img_path, cls=self.use_angle_cls)
         return result
 
     def process_result(self, img_path):
+        """
+        Processes the OCR result to extract word-level text and positions.
+
+        Args:
+            img_path (str): The path to the image file.
+
+        Returns:
+            list: A list of tuples containing the text and its corresponding positions.
+        """
+
         result = self.get_result(img_path)[0]
         cur_text = []
         cur_pos = []
         for line in result:
             boxes = line[0]
             txts = line[1][0]
-            ##
+
             topLeft, topRight, bottomRight, bottomLeft = boxes
-            ##
+
             dxTop = (topRight[0] - topLeft[0]) / len(txts)
             dxBottom = (bottomRight[0] - bottomLeft[0]) / len(txts)
             dyTop = (topRight[1] - topLeft[1]) / len(txts)
             dyBottom = (bottomRight[1] - bottomLeft[1]) / len(txts)
-            ##
+
             new_txt = txts.split()
             top, bottom = topLeft, bottomLeft
 
@@ -64,6 +106,14 @@ class wordLevelPaddleOCR:
         return list(zip(cur_text, cur_pos))
 
     def export(self, input_dir, output_dir):
+        """
+        Processes all images in the input directory, saves results as JSON, and annotated images in the output directory.
+
+        Args:
+            input_dir (str): The directory containing input images.
+            output_dir (str): The directory to save the JSON results and annotated images.
+        """
+
         os.makedirs(output_dir, exist_ok=True)
         file_paths = glob.glob(os.path.join(input_dir, '*'))
 
