@@ -107,6 +107,16 @@ class wordLevelPaddleOCR:
         return list(zip(cur_text, cur_pos))
 
     def export(self, path):
+        """
+        Export processed results as JSON files for each image in the specified directory.
+
+        Args:
+            path (str): The path to the directory where images are stored.
+
+        Example:
+            To export results for images in 'data/images/', use:
+            >>> instance.export('data/images/')
+        """
         converter = FileConverter(path)
         input_dir = converter.convert_to_image()
         file_paths = glob.glob(os.path.join(input_dir, '*'))
