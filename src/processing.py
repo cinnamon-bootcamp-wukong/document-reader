@@ -3,6 +3,7 @@ import os
 import json
 import glob
 from PIL import Image
+from convert import FileConverter
 
 
 class wordLevelPaddleOCR:
@@ -44,7 +45,7 @@ class wordLevelPaddleOCR:
             det_algorithm=self.det_algorithm,
         )
 
-    def get_result(self, img_path):
+    def __get_result(self, img_path):
         """
         Performs OCR on the given image and returns the result.
 
@@ -58,7 +59,7 @@ class wordLevelPaddleOCR:
         result = self.ocr.ocr(img_path, cls=self.use_angle_cls)
         return result
 
-    def process_result(self, img_path):
+    def __process_result(self, img_path):
         """
         Processes the OCR result to extract word-level text and positions.
 
@@ -69,7 +70,7 @@ class wordLevelPaddleOCR:
             list: A list of tuples containing the text and its corresponding positions.
         """
 
-        result = self.get_result(img_path)[0]
+        result = self.__get_result(img_path)[0]
         cur_text = []
         cur_pos = []
         for line in result:
@@ -105,29 +106,18 @@ class wordLevelPaddleOCR:
 
         return list(zip(cur_text, cur_pos))
 
-    def export(self, input_dir, output_dir):
-        """
-        Processes all images in the input directory, saves results as JSON, and annotated images in the output directory.
-
-        Args:
-            input_dir (str): The directory containing input images.
-            output_dir (str): The directory to save the JSON results and annotated images.
-        """
-
-        os.makedirs(output_dir, exist_ok=True)
+    def export(self, path):
+        converter = FileConverter(path)
+        input_dir = converter.convert_to_image()
         file_paths = glob.glob(os.path.join(input_dir, '*'))
 
         for img_path in file_paths:
-            result = self.process_result(img_path)
+            result = self.__process_result(img_path)
             # Generate JSON output path based on image name
             img_name = os.path.basename(img_path)
             base_name, _ = os.path.splitext(img_name)
-            output_json_path = os.path.join(output_dir, f"{base_name}.json")
-            output_img_path = os.path.join(output_dir, f"{base_name}_annotated.jpg")
+            output_json_path = os.path.join(input_dir, f"{base_name}.json")
 
             # Save results to JSON file
             with open(output_json_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, ensure_ascii=False, indent=4)
-
-            image = Image.open(img_path).convert('RGB')
-            image.save(output_img_path)
