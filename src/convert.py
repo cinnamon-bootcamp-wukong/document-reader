@@ -58,6 +58,7 @@ class FileConverter:
                 result = mammoth.convert_to_html(docx_file)
                 html = result.value
             script_dir = os.path.dirname(os.path.abspath(__file__))
+            script_dir = os.path.join(script_dir, 'style')
             custom_css = CSS(filename=os.path.join(script_dir, 'custom.css'))
             HTML(string=html).write_pdf(
                 pdf_file_path,
