@@ -1,4 +1,5 @@
 import os
+import shlex
 
 
 def upload_file(filename: str, rclone_remote_name: str, remote_dir_path: str) -> int:
@@ -11,5 +12,10 @@ def upload_file(filename: str, rclone_remote_name: str, remote_dir_path: str) ->
 
     :return the error code of the `rclone copy` command.
     """
-    errcode = os.system(f"rclone copy {filename} {rclone_remote_name}:{remote_dir_path}")
+    sanitized_filename = shlex.quote(filename)
+    sanitized_remote_name = shlex.quote(rclone_remote_name)
+    sanitized_remote_path = shlex.quote(remote_dir_path)
+    errcode = os.system(
+        f"rclone copy {sanitized_filename} {sanitized_remote_name}:{sanitized_remote_path}"
+    )
     return errcode
