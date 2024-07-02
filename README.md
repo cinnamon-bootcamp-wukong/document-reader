@@ -57,13 +57,3 @@ Install dependencies using `requirements.txt`:
 ```bash
 pip install -r requirements.txt
 ```
-
-## Testing
-
-Unit tests are located in `UnitTest/test_processing/` and `UnitTest/test_convert/`. Use pytest to run tests:
-```bash
-pytest test_processing.py
-```
-
-
-
